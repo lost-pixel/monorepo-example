@@ -1,0 +1,68 @@
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    name: Lost Pixel
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16.x
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 7.17.1
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Build App
+        run: cd apps/docs && pnpm run dev &
+
+      - name: Build Docs
+        run: cd apps/web && pnpm run dev &
+
+  lost_pixel:
+    needs: build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        config:
+          - { package: "apps/web", name: "Lost Pixel for Web" }
+          - { package: "apps/docs", name: "Lost Pixel for Docs" }
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Download built storybooks
+        uses: actions/download-artifact@v2
+        with:
+          name: storybooks
+
+      - name: ${{ matrix.config.name }}
+        uses: lost-pixel/lost-pixel@v3.3.0
+        env:
+          LOST_PIXEL_API_KEY: ${{ secrets.LOST_PIXEL_API_KEY }}
+          LOST_PIXEL_CONFIG_DIR: ${{ matrix.config.package }}
+
+  finalize:
+    needs: [lost_pixel]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Lost Pixel Finalize
+        uses: lost-pixel/lost-pixel@v3.3.0
+        env:
+          LOST_PIXEL_API_KEY: ${{ secrets.LOST_PIXEL_API_KEY }}
+          LOST_PIXEL_CONFIG_DIR: apps/docs
+        with:
+          FINALIZE: true
