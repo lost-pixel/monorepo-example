@@ -3,7 +3,10 @@ import { CustomProjectConfig } from "lost-pixel";
 //@ts-expect-error - types are broken, need fix
 export const config: CustomProjectConfig = {
   pageShots: {
-    pages: [{ path: "/", name: "web" }],
+    pages: [
+      { path: "/", name: "docs-home" },
+      { path: "/main", name: "main" },
+    ],
     baseUrl: "http://172.17.0.1:3000",
   },
   lostPixelProjectId: "clgjsy7vk01vajs0er6790hjs",
