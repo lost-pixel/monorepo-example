@@ -7,37 +7,7 @@ on:
       - main
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    name: Lost Pixel
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Setup Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16.x
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 7.17.1
-
-      - name: Install dependencies
-        run: pnpm install
-
-      - name: Cache Build
-        uses: actions/cache@v2
-        with:
-          path: |
-            apps/web/.next
-            apps/docs/.next
-          key: ${{ runner.os }}-build-${{ github.sha }}
-
   lost_pixel:
-    needs: build
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -89,3 +59,18 @@ jobs:
         env:
           LOST_PIXEL_API_KEY: ${{ secrets.LOST_PIXEL_API_KEY }}
           LOST_PIXEL_CONFIG_DIR: ${{ matrix.config.package }}
+  finalize:
+    needs: [lost_pixel]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Lost Pixel Finalize
+        uses: lost-pixel/lost-pixel@v3.3.0
+        env:
+          LOST_PIXEL_API_KEY: ${{ secrets.LOST_PIXEL_API_KEY }}
+          LOST_PIXEL_CONFIG_DIR: apps/web
+        with:
+          FINALIZE: true
